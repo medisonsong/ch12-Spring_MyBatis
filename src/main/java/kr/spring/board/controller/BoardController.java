@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -100,6 +101,77 @@ public class BoardController {
 		
 		return new ModelAndView("selectDetail", "board", board); //뷰이름, 속성명, 속성값
 	}
+	
+	
+	//수정폼 호출
+	@GetMapping("/update.do")
+	public String formUpdate(@RequestParam int num, Model model) {
+		
+		model.addAttribute("boardVO", boardService.selectBoard(num));
+		
+		return "updateForm";
+	}
+	
+	//글 수정
+	@PostMapping("/update.do")
+	public String submitUpdate(@Valid BoardVO boardVO, BindingResult result) {
+		
+		//유효성 체크 결과 오류가 있으면 폼을 재호출
+		if(result.hasErrors()) {
+			return "updateForm";
+		}
+		
+		//비밀번호 일치 여부 체크
+		//1) DB에 저장된 비밀번호 구하기
+		BoardVO db_board = boardService.selectBoard(boardVO.getNum()); //한건의 데이터 읽어오기
+		//2) 비밀번호 체크
+		if(!db_board.getPasswd().equals(boardVO.getPasswd())) {
+			result.rejectValue("passwd", "invalidPassword"); //에러필드, 에러코드
+			return "updateForm";
+		}
+		
+		//글 수정
+		boardService.updateBoard(boardVO);
+		
+		return "redirect:/list.do";
+	}
+	
+	//글 삭제폼 호출
+	@GetMapping("/delete.do")
+	public String formDelete(@RequestParam int num, Model model) {
+		
+		BoardVO boardVO = new BoardVO(); //객체 생성
+		boardVO.setNum(num); //num 값 넣기
+		
+		model.addAttribute("boardVO", boardVO); //속성명,데이터
+		
+		return "deleteForm";
+	}
+	
+	//글 삭제
+	@PostMapping("/delete.do")
+	public String submitDelete(@Valid BoardVO boardVO, BindingResult result) {
+		
+		//유효성 체크 결과 오류가 있으면 폼을 재호출
+		//비밀번호만 전송 여부 체크
+		if(result.hasFieldErrors("passwd")) {
+			return "deleteForm";
+		}
+		
+		//DB에 저장된 비밀번호 구하기
+		BoardVO db_board = boardService.selectBoard(boardVO.getNum()); //한건의 데이터 읽어오기
+		//비밀번호 일치여부 체크
+		if(!db_board.getPasswd().equals(boardVO.getPasswd())) {
+			result.rejectValue("passwd", "invalidPassword"); //에러필드,에러코드
+			return "deleteForm";
+		}
+		
+		//글 삭제
+		boardService.deleteBoard(boardVO.getNum());
+		
+		return "redirect:/list.do";
+	}
+	
 	
 	
 }

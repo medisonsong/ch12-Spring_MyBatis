@@ -50,6 +50,7 @@
 		<property name="typeAliasesPackage" value="kr.spring.board.vo"/>
 	</bean>
 	
+	<!-- dao 인터페이스와 xml 입력 -->
 	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
 		<property name="basePackage" value="kr.spring.board.dao"/>
 	</bean>
